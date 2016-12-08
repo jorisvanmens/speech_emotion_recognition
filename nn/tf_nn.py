@@ -1,12 +1,11 @@
 from __future__ import print_function
 import tensorflow as tf
-from tensorflow.python.ops import rnn, rnn_cell
 
 import arff
 import pprint
 from pdb import set_trace as t
 import numpy as np
-from sklearn import linear_model, datasets, svm, mixture, preprocessing
+from sklearn import linear_model, datasets, svm, mixture, preprocessing, metrics
 
 
 # Load the feature data file
@@ -84,9 +83,9 @@ featureIndices = getFeatureIndices(features)
 xTrain, yTrain = createLimitedFeatureVector(featuresData['data'], featureIndices, labelIndex)
 xTest, yTest = createLimitedFeatureVector(testFeaturesData['data'], featureIndices, labelIndex)
 
-#scaler = preprocessing.StandardScaler().fit(xTrain)
-#xTrain = scaler.transform(xTrain)
-#xTest = scaler.transform(xTest)
+scaler = preprocessing.MinMaxScaler().fit(xTrain)
+xTrain = scaler.transform(xTrain)
+xTest = scaler.transform(xTest)
 
 yTrainNumeric = map(lambda x: emotionToClassTensor(x), yTrain)
 yTestNumeric = map(lambda x: emotionToClassTensor(x), yTest)
@@ -94,63 +93,87 @@ yTestNumeric = map(lambda x: emotionToClassTensor(x), yTest)
 xTrainNp = np.array(xTrain)
 yTrainNp = np.array(yTrainNumeric)
 
+print("Size of xTrain %d, yTrain %d" % (len(xTrain), len(yTrain)))
+
 
 # Parameters
-learning_rate = 0.001
-training_iters = 100000
-batch_size = 128
-display_step = 10
+learning_rate = 0.0001
+training_epochs = 9000  
+batch_size = 580
+display_step = 1
 
 # Network Parameters
-n_input = 28 # MNIST data input (img shape: 28*28)
-n_steps = 28 # timesteps
-n_hidden = 128 # hidden layer num of features
-n_classes = 5 # MNIST total classes (0-9 digits)
+n_hidden_1 = 512 # 1st layer number of features
+n_hidden_2 = 512 # 2nd layer number of features
+n_hidden_3 = 256 # 3rd layer
+n_hidden_4 = 16
+n_input = len(xTrain[0]) # data input
+dropout = 0.7
+
+n_classes = 5 # total classes (0-4 digits)
 
 # tf Graph input
-x = tf.placeholder("float", [None, n_steps, n_input])
+x = tf.placeholder("float", [None, n_input])
 y = tf.placeholder("float", [None, n_classes])
 
-# Define weights
+np.random.seed(10)
+
+def next_batch(batch_size):
+     shuffle_indices = np.random.permutation(np.arange(len(xTrainNp)))
+     x_shuffled = xTrainNp[shuffle_indices]
+     y_shuffled = yTrainNp[shuffle_indices]
+     return x_shuffled[:batch_size], y_shuffled[:batch_size]
+
+# Create model
+def multilayer_perceptron(x, weights, biases):
+    # Hidden layer with RELU activation
+    layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
+    layer_1 = tf.nn.relu(layer_1)
+    #layer_1 = tf.nn.dropout(layer_1, dropout)
+    # Hidden layer with RELU activation
+    layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
+    layer_2 = tf.nn.relu(layer_2)
+    #layer_2 = tf.nn.dropout(layer_2, dropout)
+    
+    #layer_3 = tf.add(tf.matmul(layer_2, weights['h3']), biases['b3'])
+    #layer_3 = tf.nn.relu(layer_3)
+    
+    #layer_4 = tf.add(tf.matmul(layer_3, weights['h4']), biases['b4'])
+    #layer_4 = tf.nn.relu(layer_4)
+    
+    # Output layer with linear activation
+    out_layer = tf.matmul(layer_2, weights['out']) + biases['out']
+    return out_layer
+
+# Store layers weight & bias
 weights = {
-    'out': tf.Variable(tf.random_normal([n_hidden, n_classes]))
+    'h1': tf.Variable(tf.random_normal([n_input, n_hidden_1])),
+    'h2': tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2])),
+    'h3': tf.Variable(tf.random_normal([n_hidden_2, n_hidden_3])),
+    'h4': tf.Variable(tf.random_normal([n_hidden_3, n_hidden_4])),
+    'out': tf.Variable(tf.random_normal([n_hidden_2, n_classes]))
 }
 biases = {
+    'b1': tf.Variable(tf.random_normal([n_hidden_1])),
+    'b2': tf.Variable(tf.random_normal([n_hidden_2])),
+    'b3': tf.Variable(tf.random_normal([n_hidden_3])),
+    'b4': tf.Variable(tf.random_normal([n_hidden_4])),
     'out': tf.Variable(tf.random_normal([n_classes]))
 }
-
-
-def RNN(x, weights, biases):
-
-    # Prepare data shape to match `rnn` function requirements
-    # Current data input shape: (batch_size, n_steps, n_input)
-    # Required shape: 'n_steps' tensors list of shape (batch_size, n_input)
-
-    # Permuting batch_size and n_steps
-    x = tf.transpose(x, [1, 0, 2])
-    # Reshaping to (n_steps*batch_size, n_input)
-    x = tf.reshape(x, [-1, n_input])
-    # Split to get a list of 'n_steps' tensors of shape (batch_size, n_input)
-    x = tf.split(0, n_steps, x)
-
-    # Define a lstm cell with tensorflow
-    lstm_cell = rnn_cell.BasicLSTMCell(n_hidden, forget_bias=1.0)
-
-    # Get lstm cell output
-    outputs, states = rnn.rnn(lstm_cell, x, dtype=tf.float32)
-
-    # Linear activation, using rnn inner loop last output
-    return tf.matmul(outputs[-1], weights['out']) + biases['out']
-
-pred = RNN(x, weights, biases)
+ 
+# Construct model
+pred = multilayer_perceptron(x, weights, biases)
 
 # Define loss and optimizer
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred, y))
+cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred, y)
+                      #+ 0.01*tf.nn.l2_loss(weights['h1'])
+                      #+ 0.01*tf.nn.l2_loss(weights['h2'])
+                      #+ 0.01*tf.nn.l2_loss(weights['out'])
+                      #+ 0.01*tf.nn.l2_loss(biases['b1'])
+                      #+ 0.01*tf.nn.l2_loss(biases['b2'])
+                      #+ 0.01*tf.nn.l2_loss(biases['out'])
+                      )
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
-
-# Evaluate model
-correct_pred = tf.equal(tf.argmax(pred,1), tf.argmax(y,1))
-accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
 # Initializing the variables
 init = tf.initialize_all_variables()
@@ -158,28 +181,52 @@ init = tf.initialize_all_variables()
 # Launch the graph
 with tf.Session() as sess:
     sess.run(init)
-    step = 1
-    # Keep training until reach max iterations
-    while step * batch_size < training_iters:
-        batch_x, batch_y = mnist.train.next_batch(batch_size)
-        # Reshape data to get 28 seq of 28 elements
-        batch_x = batch_x.reshape((batch_size, n_steps, n_input))
-        # Run optimization op (backprop)
-        sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
-        if step % display_step == 0:
-            # Calculate batch accuracy
-            acc = sess.run(accuracy, feed_dict={x: batch_x, y: batch_y})
-            # Calculate batch loss
-            loss = sess.run(cost, feed_dict={x: batch_x, y: batch_y})
-            print("Iter " + str(step*batch_size) + ", Minibatch Loss= " + \
-                  "{:.6f}".format(loss) + ", Training Accuracy= " + \
-                  "{:.5f}".format(acc))
-        step += 1
+
+    # Training cycle
+    for epoch in range(training_epochs):
+        avg_cost = 0.
+        total_batch = int(len(xTrain)/batch_size)
+        # Loop over all batches
+        for i in range(total_batch):
+            batch_x, batch_y = next_batch(batch_size)
+            # Run optimization op (backprop) and cost op (to get loss value)
+            _, c = sess.run([optimizer, cost], feed_dict={x: batch_x,
+                                                          y: batch_y})
+            # Compute average loss
+            avg_cost += c / total_batch
+        # Display logs per epoch step
+        if epoch % display_step == 0:
+            print("Epoch:", '%04d' % (epoch+1), "cost=", \
+                "{:.9f}".format(avg_cost))
     print("Optimization Finished!")
 
-    # Calculate accuracy for 128 mnist test images
-    test_len = 128
-    test_data = mnist.test.images[:test_len].reshape((-1, n_steps, n_input))
-    test_label = mnist.test.labels[:test_len]
-    print("Testing Accuracy:", \
-        sess.run(accuracy, feed_dict={x: test_data, y: test_label}))
+    # Test model
+    y_p = tf.argmax(pred, 1)
+    correct_prediction = tf.equal(y_p, tf.argmax(y, 1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
+    
+    print ("Traing Data Metrics:")
+    val_accuracy, y_pred = sess.run([accuracy, y_p], feed_dict= {x: xTrain, y: yTrainNumeric})
+    print ("validation accuracy: " , "{:.9f}".format(val_accuracy))
+    y_true = np.argmax(yTrainNumeric,1)
+    #print ("Y_true: ", y_true)
+    #print ("Y_pred: ", y_pred)
+    print ("Precision:", metrics.precision_score(y_true, y_pred, average=None))
+    print ("Recall:", metrics.recall_score(y_true, y_pred, average=None))
+    print ("f1_score:", metrics.f1_score(y_true, y_pred, average=None))
+    print ("confusion_matrix")
+    print (metrics.confusion_matrix(y_true, y_pred))
+
+    #metrics
+    print ("Test Data Metrics:")
+    val_accuracy, y_pred = sess.run([accuracy, y_p], feed_dict= {x: xTest, y: yTestNumeric})
+    print ("validation accuracy: " , "{:.9f}".format(val_accuracy))
+    y_true = np.argmax(yTestNumeric,1)
+    #print ("Y_true: ", y_true)
+    #print ("Y_pred: ", y_pred)
+    print ("Precision:", metrics.precision_score(y_true, y_pred, average=None))
+    print ("Recall:", metrics.recall_score(y_true, y_pred, average=None))
+    print ("f1_score:", metrics.f1_score(y_true, y_pred, average=None))
+    print ("confusion_matrix")
+    print (metrics.confusion_matrix(y_true, y_pred))
+    
