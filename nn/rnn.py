@@ -1,3 +1,5 @@
+"""Implementation of the simple single-layer LSTM for emotion recognition."""
+
 from bregman.suite import *
 
 from os import listdir

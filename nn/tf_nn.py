@@ -1,3 +1,5 @@
+"""Implementation of the simple multilayer perceptron NN for emotion recognition."""
+
 from __future__ import print_function
 import tensorflow as tf
 

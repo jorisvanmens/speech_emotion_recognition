@@ -1,3 +1,8 @@
+"""Implementation of the simple emotion recognition classifier using XGBoost trees.
+   We have not reported this approach in the project paper, but this experiment was useful
+   at the initial stages of the project.
+"""
+
 import arff
 import numpy as np
 import pandas as pd
