@@ -7,18 +7,15 @@ from sklearn import preprocessing
 from sklearn import metrics
 
 # Load the feature data file
-featuresFilePath = "./data/train_data_features_large.arff"
+featuresFilePath = "../data/train_data_features_large.arff"
 featuresData = arff.load(open(featuresFilePath))
-testFeaturesFilePath = "./data/test_data_features_large.arff"
+testFeaturesFilePath = "../data/test_data_features_large.arff"
 testFeaturesData = arff.load(open(testFeaturesFilePath))
 
 def Sanitize(col_name):
     return col_name.replace('[', '_').replace(']', '_')
 
-#x_dtype = [(Sanitize(n), 'f4' if t == 'NUMERIC' else 'U10') for n, t in featuresData['attributes']]
-#print (x_dtype)
 columns = [Sanitize(n) for n, _ in featuresData['attributes']]
-#x_train = pd.DataFrame(np.array([tuple(r) for r in featuresData['data']]), columns=columns)
 x_train = pd.DataFrame([tuple(r) for r in featuresData['data']], columns=columns)
 
 y_encoder = preprocessing.LabelEncoder()

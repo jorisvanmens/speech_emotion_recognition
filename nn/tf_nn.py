@@ -9,18 +9,10 @@ from sklearn import linear_model, datasets, svm, mixture, preprocessing, metrics
 
 
 # Load the feature data file
-featuresFilePath = "./data/train_data_features_large.arff"
+featuresFilePath = "../data/train_data_features_large.arff"
 featuresData = arff.load(open(featuresFilePath, 'rb'))
-testFeaturesFilePath = "./data/test_data_features_large.arff"
+testFeaturesFilePath = "../data/test_data_features_large.arff"
 testFeaturesData = arff.load(open(testFeaturesFilePath, 'rb'))
-
-# Define baseline features
-#baseLineFeatures = [u'pcm_intensity_sma_quartile1', u'pcm_intensity_sma_amean', u'pcm_intensity_sma_quartile3', u'pcm_intensity_sma_stddev',
-#    u'pcm_loudness_sma_quartile1', u'pcm_loudness_sma_amean', u'pcm_loudness_sma_quartile3', u'pcm_loudness_sma_stddev', u'F0_sma_quartile1', 
-#    u'F0_sma_amean', u'F0_sma_quartile3', u'F0_sma_stddev']
-#baseLineFeatures = [u'pcm_intensity_sma_amean']
-#baseLineFeatures = [u'pcm_LOGenergy_sma_amean', u'pcm_LOGenergy_sma_stddev', u'pcm_Mag_melspec_sma[0]_amean', u'pcm_Mag_melspec_sma[0]_stddev', 
-# u'mfcc_sma[0]_amean', u'mfcc_sma[0]_stddev']
 
 # Below features (selected after reviewing literature) provide great results
 features = [
@@ -54,8 +46,6 @@ emotions = [
 
 def emotionToClassTensor(emotion):
     return map(lambda x: (1 if x==emotion else 0), emotions)
-
-#print featuresData['attributes']
 
 # Get indices for certain features. You can get the list of all features through featuresData['attributes']
 # The format of that is a list of tuples: (featureName, featureType), below I call these tuples "feature"
@@ -93,9 +83,6 @@ yTestNumeric = map(lambda x: emotionToClassTensor(x), yTest)
 xTrainNp = np.array(xTrain)
 yTrainNp = np.array(yTrainNumeric)
 
-print("Size of xTrain %d, yTrain %d" % (len(xTrain), len(yTrain)))
-
-
 # Parameters
 learning_rate = 0.0001
 training_epochs = 9000  
@@ -130,17 +117,20 @@ def multilayer_perceptron(x, weights, biases):
     layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
     layer_1 = tf.nn.relu(layer_1)
     #layer_1 = tf.nn.dropout(layer_1, dropout)
+
     # Hidden layer with RELU activation
     layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
     layer_2 = tf.nn.relu(layer_2)
     #layer_2 = tf.nn.dropout(layer_2, dropout)
-    
+
+    # Hidden layer with RELU activation
     #layer_3 = tf.add(tf.matmul(layer_2, weights['h3']), biases['b3'])
     #layer_3 = tf.nn.relu(layer_3)
-    
+
+    # Hidden layer with RELI activation
     #layer_4 = tf.add(tf.matmul(layer_3, weights['h4']), biases['b4'])
     #layer_4 = tf.nn.relu(layer_4)
-    
+
     # Output layer with linear activation
     out_layer = tf.matmul(layer_2, weights['out']) + biases['out']
     return out_layer
@@ -166,6 +156,7 @@ pred = multilayer_perceptron(x, weights, biases)
 
 # Define loss and optimizer
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred, y)
+                      # Uncomment the following to apply l2_loss to layers
                       #+ 0.01*tf.nn.l2_loss(weights['h1'])
                       #+ 0.01*tf.nn.l2_loss(weights['h2'])
                       #+ 0.01*tf.nn.l2_loss(weights['out'])
@@ -229,4 +220,3 @@ with tf.Session() as sess:
     print ("f1_score:", metrics.f1_score(y_true, y_pred, average=None))
     print ("confusion_matrix")
     print (metrics.confusion_matrix(y_true, y_pred))
-    
