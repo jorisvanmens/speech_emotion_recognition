@@ -1,4 +1,6 @@
-"""Implementation of the simple single-layer LSTM for emotion recognition."""
+"""Implementation of the simple single-layer LSTM for emotion recognition.
+   Note: The code here is influenced a lot by TensorFlow examples - https://github.com/aymericdamien/TensorFlow-Examples
+"""
 
 from bregman.suite import *
 

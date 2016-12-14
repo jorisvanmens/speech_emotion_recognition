@@ -1,4 +1,6 @@
-"""Implementation of the simple multilayer perceptron NN for emotion recognition."""
+"""Implementation of the simple multilayer perceptron NN for emotion recognition.
+   Note: The code here is influenced a lot by TensorFlow examples - https://github.com/aymericdamien/TensorFlow-Examples.
+"""
 
 from __future__ import print_function
 import tensorflow as tf
