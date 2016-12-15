@@ -29,27 +29,27 @@ The following packages should be pre-installed to use the code from this project
 
 The following is the expected layout of the original wave files dataset on the filesystem:
 
-   rootdir
-      train/
-            emotion1/
-                File1
-                File2
-                …
-            emotion2/
-                File1
-                File2
-                …
-            ...
-      test/
-            emotion1/
-                File1
-                File2
-                …
-            emotion2/
-                File1
-                File2
-                …
-            ...
+   rootdir  
+      train/  
+            emotion1/  
+                File1  
+                File2  
+                ...  
+            emotion2/  
+                File1  
+                File2  
+                ...  
+            ...  
+      test/  
+            emotion1/  
+                File1  
+                File2  
+                ...  
+            emotion2/  
+                File1  
+                File2  
+                ...  
+            ...  
 
 ## Tests
 
