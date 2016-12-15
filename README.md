@@ -15,12 +15,12 @@ The code here implements different approaches to classification of the emotions 
 
 The following packages should be pre-installed to use the code from this project:
 
-TensorFlow (https://www.tensorflow.org)
-NumPy (http://www.numpy.org/)
-Scikit-learn (http://scikit-learn.org/stable/)
-Arff (https://pypi.python.org/pypi/arff/0.9)
-Bregman Audio-Visual Information Toolbox (http://digitalmusics.dartmouth.edu/~mcasey/bregman/#download-bregman)
-OpenSmile (https://sourceforge.net/projects/opensmile/?source=directory)
+- TensorFlow (https://www.tensorflow.org)
+- NumPy (http://www.numpy.org/)
+- Scikit-learn (http://scikit-learn.org/stable/)
+- Arff (https://pypi.python.org/pypi/arff/0.9)
+- Bregman Audio-Visual Information Toolbox (http://digitalmusics.dartmouth.edu/~mcasey/bregman/#download-bregman)
+- OpenSmile (https://sourceforge.net/projects/opensmile/?source=directory)
 
 ## Expected dataset layout
 
