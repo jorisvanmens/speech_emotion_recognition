@@ -5,13 +5,13 @@ The code here implements different approaches to classification of the emotions 
 
 ## Code structure
 
- - data/
+ - data/  
    The arff feature files extracted from the original dataset using openSmile package.
 
- - modeltrain/ 
+ - modeltrain/  
    The scripts used to automate feature extraction, training the models and classification of the test set from the original data. It is mostly copied from the corresponding dir from the openSmile packet.  
 
- - nn/ dir
+ - nn/  
    The implementation of the simple multilayer perceptron (tf_nn.py) and single-layer lstm rnn (rnn.py) used in the project to analyze the performance of the NN to classify the utterances into emotion categories in the project.
 
 ## Installation
