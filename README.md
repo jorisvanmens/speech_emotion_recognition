@@ -13,6 +13,9 @@ The code here implements different approaches to classification of the emotions 
 
  - nn/  
    The implementation of the simple multilayer perceptron (tf_nn.py) and single-layer lstm rnn (rnn.py) used in the project to analyze the performance of the NN to classify the utterances into emotion categories in the project.
+   
+ - svm_gmm_logreg/  
+   The implementation of Support Vector Machine, Gaussian Mixture Model and Logistic Regression models. Includes training and test set error analysis.
 
 ## Installation
 
@@ -21,7 +24,7 @@ The following packages should be pre-installed to use the code from this project
 - TensorFlow (https://www.tensorflow.org)
 - NumPy (http://www.numpy.org/)
 - Scikit-learn (http://scikit-learn.org/stable/)
-- Arff (https://pypi.python.org/pypi/arff/0.9)
+- Arff (https://pypi.python.org/pypi/liac-arff)
 - Bregman Audio-Visual Information Toolbox (http://digitalmusics.dartmouth.edu/~mcasey/bregman/#download-bregman)
 - OpenSmile (https://sourceforge.net/projects/opensmile/?source=directory)
 
@@ -56,3 +59,5 @@ The following is the expected layout of the original wave files dataset on the f
 - To train and test the multilayer perceptron nn classifier, run `cd nn && python tf_nn.py`
 - To train and test the LSTM RNN classifier, run `cd nn && python rnn.py`
    Note: you will need to edit the rnn.py to provide the proper path to the original dataset.
+- To train and test the SVM, GMM and Logistic Regression models, run `cd svm_gmm_logreg && python svm_gmm_logreg.py`
+   Note: you will need to edit the svm_gmm_loger.py to provide the proper path to the original dataset (../data/etc.)
